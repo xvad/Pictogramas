@@ -37,6 +37,8 @@ public class MainActivity extends AppCompatActivity {
     ImageView cuadro2 = null;
     ImageView cuadro3 = null;
     List<Integer> numRandoms;
+    //Lista que contiene los cuadros yas respondidos
+    final List<Integer> numerosCuadros = new ArrayList<Integer>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -138,9 +140,6 @@ public class MainActivity extends AppCompatActivity {
 
         }
 
-        //Lista que contiene los cuadros yas respondidos
-        final List<Integer> numerosCuadros = new ArrayList<Integer>();
-
         //Al presionar la respuesta 1
         respuesta1.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -215,7 +214,7 @@ public class MainActivity extends AppCompatActivity {
     //Metodo que verifica se la respuesta seleccionada es la correcta
     public boolean isCorrecta(final int posicion, int idRespuesta, final ImageView respuesta) {
         List<Oracion> oracionList = SQLite.select().from(Oracion.class).queryList();
-
+        Handler handler = new Handler();
         if (oracionList.get(0).palabras.get(posicion).getNombre().equals(respuesta.getTag())) {
 
             if (posicion == 2) {
@@ -240,22 +239,21 @@ public class MainActivity extends AppCompatActivity {
             final Drawable res = getResources().getDrawable(imageResource);
 
             //Se utiliza un pequeño hilo para cambiar la respuesta
-            Handler handler = new Handler();
             handler.postDelayed(new Runnable() {
                 public void run() {
-                    if (posicion == 0) {
+                    if (posicion == 0 && numerosCuadros.size() == 0) {
                         cuadro1.setImageDrawable(res);
                     }
-                    if (posicion == 1) {
+                    if (posicion == 1 && numerosCuadros.size() == 1) {
                         cuadro2.setImageDrawable(res);
                     }
-                    if (posicion == 2) {
+                    if (posicion == 2 && numerosCuadros.size() == 2) {
                         cuadro3.setImageDrawable(res);
                     }
                 respuesta.setVisibility(View.VISIBLE);
 
                 }
-            }, 1700);
+            }, 1200);
 
             return false;
         }

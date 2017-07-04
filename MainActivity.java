@@ -36,8 +36,7 @@ public class MainActivity extends AppCompatActivity {
     ImageView cuadro1 = null;
     ImageView cuadro2 = null;
     ImageView cuadro3 = null;
-    List<Integer> numRandoms;
-    //Lista que contiene los cuadros yas respondidos
+
     final List<Integer> numerosCuadros = new ArrayList<Integer>();
 
     @Override
@@ -45,6 +44,7 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        //Inicializacion de los objetos de la vista xml
         final ImageView imagenRespuesta = (ImageView) findViewById(R.id.imagenRespuesta);
         respuesta1 = (ImageView) findViewById(R.id.respuesta1);
         respuesta2 = (ImageView) findViewById(R.id.respuesta2);
@@ -72,73 +72,35 @@ public class MainActivity extends AppCompatActivity {
             Bitmap image = BitmapFactory.decodeResource(getResources(), R.drawable.laniniabaila);
 
             //cuadro2.setImageBitmap(image);
-            Oracion ora = new Oracion();
-            ora.setRespuesta("La niña baila");
-            ora.setImagen(getEncodedImage(image));
-            ora.save();
+            Oracion oracion = new Oracion();
+            oracion.setRespuesta("La niña baila");
+            oracion.setImagen(getEncodedImage(image));
+            oracion.save();
             Bitmap imageCuadro = BitmapFactory.decodeResource(getResources(), R.drawable.cuadrovacio);
             image = BitmapFactory.decodeResource(getResources(), R.drawable.la);
             Palabra palabra = new Palabra();
             palabra.setImagen(getEncodedImage(image));
             palabra.setNombre("La");
-            palabra.oracionID = ora.getId();
+            palabra.oracionID = oracion.getId();
             palabra.save();
 
             image = BitmapFactory.decodeResource(getResources(), R.drawable.ninia);
             palabra = new Palabra();
             palabra.setImagen(getEncodedImage(image));
             palabra.setNombre("niña");
-            palabra.oracionID = ora.getId();
+            palabra.oracionID = oracion.getId();
             palabra.save();
 
             image = BitmapFactory.decodeResource(getResources(), R.drawable.baila);
             palabra = new Palabra();
             palabra.setImagen(getEncodedImage(image));
             palabra.setNombre("baila");
-            palabra.oracionID = ora.getId();
+            palabra.oracionID = oracion.getId();
             palabra.save();
 
         }
 
-        //Recuperamos la lista de oraciones
-        //Una buena opcion es tomar solo la oracion q se ocupara mediante un WHERE esto no se hizo por ser solo un demo
-        oracionList = SQLite.select().from(Oracion.class).queryList();
-
-
-        numRandoms = new ArrayList<Integer>();
-        int aleatorio;
-        int k = 0;
-
-        //Recorremos la lista de oraciones (Al pasar a otro nivel ese cero se debe aumentar para la siguiente oracion)
-        for (final Palabra palabrasOracion : oracionList.get(0).palabras) {
-
-            while (true) {
-                aleatorio = generaNumeroAleatorio(0, oracionList.get(0).palabras.size() - 1);
-                if (!numRandoms.contains(aleatorio)) {
-                    break;
-                }
-            }
-
-            numRandoms.add(aleatorio);
-            Log.d("Numero Aletorio ", String.valueOf(aleatorio));
-            if (aleatorio == 0) {
-                respuesta1.setImageBitmap(getDecodeImage(palabrasOracion.getImagen()));
-                respuesta1.setTag(palabrasOracion.getNombre());
-            }
-
-            if (aleatorio == 1) {
-                respuesta2.setImageBitmap(getDecodeImage(palabrasOracion.getImagen()));
-                respuesta2.setTag(palabrasOracion.getNombre());
-            }
-
-            if (aleatorio == 2) {
-                respuesta3.setImageBitmap(getDecodeImage(palabrasOracion.getImagen()));
-                respuesta3.setTag(palabrasOracion.getNombre());
-            }
-
-            k++;
-
-        }
+        reOrdenarRespuestas();
 
         //Al presionar la respuesta 1
         respuesta1.setOnClickListener(new View.OnClickListener() {
@@ -210,6 +172,57 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
+    //Metodo que permite ordenar de forma aleatoria las respuestas
+    public void reOrdenarRespuestas(){
+
+        //Recuperamos la lista de oraciones
+        //Una buena opcion es tomar solo la oracion q se ocupara mediante un WHERE esto no se hizo por ser solo un demo
+        List<Oracion> oracionList = SQLite.select().from(Oracion.class).queryList();
+
+
+        List<Integer> numRandoms = new ArrayList<Integer>();
+        int aleatorio;
+        int k = 0;
+
+        //Recorremos la lista palabras de la oracion (Al pasar a otro nivel ese cero se debe aumentar para la siguiente oracion)
+        for (final Palabra palabrasOracion : oracionList.get(0).palabras) {
+
+            //Validacion cuando queden menos cuadros disponiles
+            if(numerosCuadros.size() -1 == k){
+                continue;
+            }
+
+            //Para evitar numeros repetidos random
+            while (true) {
+
+                aleatorio = generaNumeroAleatorio(numerosCuadros.size(), oracionList.get(0).palabras.size() - 1);
+                Log.d("ALEATORIO",String.valueOf(aleatorio));
+                if (!numRandoms.contains(aleatorio)) {
+                    break;
+                }
+            }
+
+            numRandoms.add(aleatorio);
+            if (aleatorio == 0 && numerosCuadros.size() <= 0) {
+                respuesta1.setImageBitmap(getDecodeImage(palabrasOracion.getImagen()));
+                respuesta1.setTag(palabrasOracion.getNombre());
+            }
+
+            if (aleatorio == 1 && numerosCuadros.size() <= 1) {
+                respuesta2.setImageBitmap(getDecodeImage(palabrasOracion.getImagen()));
+                respuesta2.setTag(palabrasOracion.getNombre());
+            }
+
+            if (aleatorio == 2 && numerosCuadros.size() <= 2) {
+                respuesta3.setImageBitmap(getDecodeImage(palabrasOracion.getImagen()));
+                respuesta3.setTag(palabrasOracion.getNombre());
+            }
+
+            k++;
+
+        }
+    }
+
 
     //Metodo que verifica se la respuesta seleccionada es la correcta
     public boolean isCorrecta(final int posicion, int idRespuesta, final ImageView respuesta) {
@@ -250,6 +263,7 @@ public class MainActivity extends AppCompatActivity {
                     if (posicion == 2 && numerosCuadros.size() == 2) {
                         cuadro3.setImageDrawable(res);
                     }
+                    reOrdenarRespuestas();
                 respuesta.setVisibility(View.VISIBLE);
 
                 }
